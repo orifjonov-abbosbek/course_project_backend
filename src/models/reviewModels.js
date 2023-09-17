@@ -2,7 +2,6 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../database/database");
 const User = require("./userModel");
 
-
 const Review = sequelize.define("Review", {
   id: {
     type: DataTypes.UUID,
@@ -10,11 +9,11 @@ const Review = sequelize.define("Review", {
     primaryKey: true,
   },
   reviewName: {
-    type: DataTypes.STRING, 
+    type: DataTypes.STRING,
     allowNull: false,
   },
   reviewedItem: {
-    type: DataTypes.STRING, 
+    type: DataTypes.STRING,
     allowNull: false,
   },
   group: {
@@ -27,6 +26,11 @@ const Review = sequelize.define("Review", {
   reviewText: {
     type: DataTypes.STRING,
     allowNull: false,
+  },
+
+  imageUrl: {
+    type: DataTypes.STRING,
+    allowNull: true,
   },
   rating: {
     type: DataTypes.FLOAT,

@@ -27,7 +27,7 @@ exports.createReview = async (req, res) => {
     res.status(201).json(review);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "server error while creating review" });
+    req.status(500).json({ message: "server error while creating review" });
   }
 };
 
@@ -38,7 +38,7 @@ exports.getAllReviews = async (req, res) => {
     res.status(200).json(reviews);
   } catch (err) {
     console.error("Error while fetching reviews", err);
-    req.status(500).json({ error: "internal server error" });
+    req.status(500).json({ message: "internal server error" });
   }
 };
 

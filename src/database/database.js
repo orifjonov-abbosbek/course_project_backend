@@ -1,24 +1,18 @@
 const { Sequelize } = require("sequelize");
 
 const sequelize = new Sequelize(
-  "course_project",
-  "root",
-  "root",
+  "course_project_9o6f",
+  "evil",
+  "3UIX9Fb7E4720lXRfL5OzfTvIGnfBIwq",
   {
-    host: "localhost", 
-    dialect: "mysql", 
-    port: 3306,
-    logging: false,
+    host: "dpg-ck0ffqu3ktkc73e171gg-a.oregon-postgres.render.com",
+    dialect: "postgres",
+    dialectOptions: {
+      ssl: {
+        require: true,
+      },
+    },
   }
 );
-
-(async () => {
-  try {
-    await sequelize.authenticate();
-    console.log("Database connection has been established successfully.");
-  } catch (error) {
-    console.error("Unable to connect to the database:", error);
-  }
-})();
 
 module.exports = sequelize;

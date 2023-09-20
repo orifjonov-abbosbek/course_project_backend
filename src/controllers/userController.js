@@ -1,13 +1,46 @@
-const express = require("express");
-const router = express.Router();
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const { Op } = require("sequelize");
 
-// Route for user registration
-router.post("/register", async (req, res) => {
+
+
+
+/**
+ * @swagger
+ * /register:
+ *   post:
+ *     summary: Register a new user.
+ *     tags:
+ *       - User
+ *     requestBody:
+ *       description: User registration data.
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 required: true
+ *               email:
+ *                 type: string
+ *                 required: true
+ *               password:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       201:
+ *         description: User registered successfully.
+ *       400:
+ *         description: Username or email already exists.
+ *       500:
+ *         description: Internal server error.
+ */
+
+exports.register = async (req, res) => {
   try {
-    // Check if the username or email is already in use
     const existingUser = await User.findOne({
       where: {
         [Op.or]: [{ username: req.body.username }, { email: req.body.email }],
@@ -20,11 +53,9 @@ router.post("/register", async (req, res) => {
         .json({ message: "Username or email already exists" });
     }
 
-    // Hash the password
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
 
-    // Create a new user
     const newUser = await User.create({
       username: req.body.username,
       email: req.body.email,
@@ -38,19 +69,59 @@ router.post("/register", async (req, res) => {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
-});
+};
 
-// Route for user authentication
-router.post("/login", async (req, res) => {
+
+
+
+
+
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Login as a user.
+ *     tags:
+ *       - User
+ *     requestBody:
+ *       description: User login data.
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 required: true
+ *               password:
+ *                 type: string
+ *                 required: true
+ *     responses:
+ *       200:
+ *         description: Authentication successful.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 token:
+ *                   type: string
+ *       401:
+ *         description: Invalid credentials.
+ *       500:
+ *         description: Internal server error.
+ */
+exports.login = async (req, res) => {
   try {
-    // Find the user by username
     const user = await User.findOne({ where: { username: req.body.username } });
 
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Compare the provided password with the hashed password
     const isPasswordValid = await bcrypt.compare(
       req.body.password,
       user.password
@@ -69,6 +140,81 @@ router.post("/login", async (req, res) => {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
-});
+};
 
-module.exports = router;
+
+
+
+/**
+ * @swagger
+ * /users:
+ *   get:
+ *     summary: Get a list of all users.
+ *     tags:
+ *       - User
+ *     responses:
+ *       200:
+ *         description: A list of users.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ *       500:
+ *         description: Internal server error.
+ */
+
+
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.findAll();
+    res.status(200).json(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+
+/**
+ * @swagger
+ * /users/{id}:
+ *   get:
+ *     summary: Get a user by ID.
+ *     tags:
+ *       - User
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the user to retrieve.
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: A user.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       404:
+ *         description: User not found.
+ *       500:
+ *         description: Internal server error.
+ */
+
+
+exports.getUserById = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

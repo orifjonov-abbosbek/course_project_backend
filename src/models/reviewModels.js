@@ -1,10 +1,10 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../database/database");
 const User = require("./userModel");
-const Comment = require("./comment");
+const Comment = require("./Comment");
 
 const Review = sequelize.define("Review", {
-  id: {
+  reviewId: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
@@ -28,7 +28,6 @@ const Review = sequelize.define("Review", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-
   imageUrl: {
     type: DataTypes.STRING,
     allowNull: true,
@@ -43,11 +42,7 @@ const Review = sequelize.define("Review", {
   },
 });
 
-Review.belongsTo(User, {
-  foreignKey: "userId",
-});
 
-Review.hasMany(Comment, {
-  foreignKey: "reviewId",
-});
+
+
 module.exports = Review;

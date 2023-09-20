@@ -1,12 +1,11 @@
 const { DataTypes } = require("sequelize");
-const { v4: uuidv4 } = require("uuid");
-const sequelize = require("../config/database");
-const crypto = require("crypto"); 
+const sequelize = require("../database/database");
+const crypto = require("crypto");
 
 const User = sequelize.define("User", {
-  id: {
+  userId: {
     type: DataTypes.UUID,
-    defaultValue: uuidv4(),
+    defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
   username: {
@@ -29,10 +28,10 @@ const User = sequelize.define("User", {
 });
 
 User.beforeCreate((user) => {
-  const randomChar = crypto.randomBytes(16).toString("hex"); 
-  const passwordData = user.password + randomChar; 
-  const hash = crypto.createHash("sha256").update(passwordData).digest("hex"); 
-  user.password = hash; 
+  const randomChar = crypto.randomBytes(16).toString("hex");
+  const passwordData = user.password + randomChar;
+  const hash = crypto.createHash("sha256").update(passwordData).digest("hex");
+  user.password = hash;
 });
 
 module.exports = User;

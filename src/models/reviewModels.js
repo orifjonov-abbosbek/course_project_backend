@@ -1,6 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../database/database");
 const User = require("./userModel");
+const Comment = require("./comment");
 
 const Review = sequelize.define("Review", {
   id: {
@@ -46,4 +47,7 @@ Review.belongsTo(User, {
   foreignKey: "userId",
 });
 
+Review.hasMany(Comment, {
+  foreignKey: "reviewId",
+});
 module.exports = Review;

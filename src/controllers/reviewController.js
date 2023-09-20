@@ -1,15 +1,20 @@
-const Review = require("../models/reviewModels");
+const express = require("express");
+const router = express.Router();
+const { Op } = require("sequelize");
+const Review = require("../models/Review");
+const User = require("../models/User");
+const Comment = require("../models/Comment");
 
-const User = require("../models/userModel");
-
-exports.createReview = async (req, res) => {
+// Create a new review
+router.post("/reviews", async (req, res) => {
   try {
     const {
       reviewName,
       reviewedItem,
       group,
       tags,
-      reviewedText,
+      reviewText,
+      imageUrl,
       rating,
       userId,
     } = req.body;
@@ -19,94 +24,126 @@ exports.createReview = async (req, res) => {
       reviewedItem,
       group,
       tags,
-      reviewedText,
+      reviewText,
+      imageUrl,
       rating,
       userId,
     });
 
-    res.status(201).json(review);
-  } catch (err) {
-    console.error(err);
-    req.status(500).json({ message: "server error while creating review" });
+    res.status(201).json({ review });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error creating the review" });
   }
-};
+});
 
-exports.getAllReviews = async (req, res) => {
+// Get all reviews
+router.get("/reviews", async (req, res) => {
   try {
-    const reviews = await Review.findAll();
-
-    res.status(200).json(reviews);
-  } catch (err) {
-    console.error("Error while fetching reviews", err);
-    req.status(500).json({ message: "internal server error" });
-  }
-};
-
-exports.getReviewByUserId = async (req, res) => {
-  try {
-    const user = await User.findByPk(userId);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
     const reviews = await Review.findAll({
-      where: { userId: user.id },
+      include: [
+        {
+          model: User,
+          attributes: ["username", "email"], 
+        },
+        {
+          model: Comment,
+          attributes: ["commentText"], 
+        },
+      ],
     });
-    res.json(reviews);
-  } catch (err) {
-    console.error("error while fetching specified review", err);
-    req.status(500).json({ error: "internal server error" });
-  }
-};
 
-exports.updateRewview = async (req, res) => {
-  const reviewId = req.params.reviewId;
+    res.status(200).json({ reviews });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error fetching reviews" });
+  }
+});
+
+// Get a single review by ID
+router.get("/reviews/:id", async (req, res) => {
+  const { id } = req.params;
+
   try {
-    const review = await Review.findByPk(reviewId);
+    const review = await Review.findByPk(id, {
+      include: [
+        {
+          model: User,
+          attributes: ["username", "email"], // Include User information
+        },
+        {
+          model: Comment,
+          attributes: ["commentText"], // Include associated comments
+        },
+      ],
+    });
 
     if (!review) {
-      return res.status(404).json({ message: "review not found" });
+      res.status(404).json({ error: "Review not found" });
+    } else {
+      res.status(200).json({ review });
     }
-
-    const { reviewName, reviewedItem, group, tags, reviewedText, rating } =
-      req.body;
-
-    review.reviewName = reviewName;
-    review.reviewedItem = reviewedItem;
-    review.group = group;
-    review.tags = tags;
-    review.reviewedText = reviewedText;
-    review.rating = rating;
-
-    await review.save();
-
-    res.json(review);
-  } catch (err) {
-    console.log("error while updating review", err);
-    req.status(500).json({ message: "internal server error" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error fetching the review" });
   }
-};
+});
 
+// Update a review by ID
+router.put("/reviews/:id", async (req, res) => {
+  const { id } = req.params;
 
+  try {
+    const review = await Review.findByPk(id);
 
-exports.deleteReview = async (req, res ) => {
-  const reviewId = req.params.reviewId;
+    if (!review) {
+      res.status(404).json({ error: "Review not found" });
+    } else {
+      const {
+        reviewName,
+        reviewedItem,
+        group,
+        tags,
+        reviewText,
+        imageUrl,
+        rating,
+      } = req.body;
 
-  try{
-    const review = await Review.findByPk(reviewId);
+      await review.update({
+        reviewName,
+        reviewedItem,
+        group,
+        tags,
+        reviewText,
+        imageUrl,
+        rating,
+      });
 
-    if(!review){
-      return res.status(404).json({message: 'review not found '});
-
+      res.status(200).json({ review });
     }
- 
-    await review.destroy();
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error updating the review" });
+  }
+});
 
-    res.status(204).send()
+// Delete a review by ID
+router.delete("/reviews/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const review = await Review.findByPk(id);
+
+    if (!review) {
+      res.status(404).json({ error: "Review not found" });
+    } else {
+      await review.destroy();
+      res.status(204).end();
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error deleting the review" });
   }
-  catch(err){
-    console.error('error while deleting review', err);
-    req.status(500).json({message: 'internal server error'});
-  }
-}
+});
+
+module.exports = router;

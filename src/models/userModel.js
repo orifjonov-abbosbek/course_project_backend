@@ -27,11 +27,5 @@ const User = sequelize.define("User", {
   },
 });
 
-User.beforeCreate((user) => {
-  const randomChar = crypto.randomBytes(16).toString("hex");
-  const passwordData = user.password + randomChar;
-  const hash = crypto.createHash("sha256").update(passwordData).digest("hex");
-  user.password = hash;
-});
 
 module.exports = User;

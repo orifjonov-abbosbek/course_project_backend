@@ -24,16 +24,7 @@ const swaggerOptions = {
       version: "1.0.0",
       description: "API documentation for the Course Project",
     },
-    tags: [
-      {
-        name: "User Management",
-        description: "Endpoints for managing users",
-      },
-      {
-        name: "Reviews Management",
-        description: "Endpoints for managing reviews",
-      },
-    ],
+   
   },
   apis: ["./src/controllers/*.js"],
 };

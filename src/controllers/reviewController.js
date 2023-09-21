@@ -1,6 +1,44 @@
 const Review = require("../models/reviewModels"); 
 
-// Create a new review
+
+/**
+ * @swagger
+ * /api/reviews:
+ *   post:
+ *     summary: Create a new review
+ *     tags: [Reviews]
+ *     parameters:
+ *       - in: body
+ *         name: review
+ *         description: Review object
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             reviewName:
+ *               type: string
+ *             reviewedItem:
+ *               type: string
+ *             group:
+ *               type: string
+ *             tags:
+ *               type: array
+ *               items:
+ *                 type: string
+ *             reviewText:
+ *               type: string
+ *             imageUrl:
+ *               type: string
+ *             rating:
+ *               type: number
+ *     responses:
+ *       201:
+ *         description: Review created successfully
+ *       500:
+ *         description: Internal server error
+ */
+
+
 exports.createReview = async (req, res) => {
   try {
     const {
@@ -33,7 +71,51 @@ exports.createReview = async (req, res) => {
   }
 };
 
-// Update a review by ID
+
+
+/**
+ * @swagger
+ * /api/reviews/{id}:
+ *   put:
+ *     summary: Update a review by ID
+ *     tags: [Reviews]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         type: string
+ *         required: true
+ *       - in: body
+ *         name: review
+ *         description: Review object
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             reviewName:
+ *               type: string
+ *             reviewedItem:
+ *               type: string
+ *             group:
+ *               type: string
+ *             tags:
+ *               type: array
+ *               items:
+ *                 type: string
+ *             reviewText:
+ *               type: string
+ *             imageUrl:
+ *               type: string
+ *             rating:
+ *               type: number
+ *     responses:
+ *       200:
+ *         description: Review updated successfully
+ *       404:
+ *         description: Review not found
+ *       500:
+ *         description: Internal server error
+ */
+
 exports.updateReview = async (req, res) => {
   try {
     const {
@@ -73,7 +155,27 @@ exports.updateReview = async (req, res) => {
   }
 };
 
-// Delete a review by ID
+
+
+/**
+ * @swagger
+ * /api/reviews/{id}:
+ *   delete:
+ *     summary: Delete a review by ID
+ *     tags: [Reviews]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         type: string
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Review deleted successfully
+ *       404:
+ *         description: Review not found
+ *       500:
+ *         description: Internal server error
+ */
 exports.deleteReview = async (req, res) => {
   try {
     const reviewId = req.params.id;
@@ -93,7 +195,25 @@ exports.deleteReview = async (req, res) => {
   }
 };
 
-// Get all reviews
+
+
+/**
+ * @swagger
+ * /api/reviews:
+ *   get:
+ *     summary: Get all reviews
+ *     tags: [Reviews]
+ *     responses:
+ *       200:
+ *         description: List of reviews
+ *         schema:
+ *           type: array
+ *           items:
+ *             $ref: "#/definitions/Review"
+ *       500:
+ *         description: Internal server error
+ */
+
 exports.getAllReviews = async (req, res) => {
   try {
     const reviews = await Review.findAll();

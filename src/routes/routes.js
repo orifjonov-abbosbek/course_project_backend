@@ -13,8 +13,12 @@ router.post("/register", userController.register);
 router.post("/login", userController.login);
 
 router.get("/users/:id", userController.getUserById);
+
+
 router.get("/users", userController.getAllUsers);
 router.get("/reviews", reviewController.getAllReviews);
+router.delete("/users/:uuid", userController.deleteUserById);
+
 
 
 

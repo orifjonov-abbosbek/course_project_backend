@@ -1,10 +1,7 @@
 const User = require("../models/userModel");
-const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const config = require("../config/conf");
 const { Op } = require("sequelize");
-
-
-
 
 /**
  * @swagger
@@ -71,11 +68,6 @@ exports.register = async (req, res) => {
   }
 };
 
-
-
-
-
-
 /**
  * @swagger
  * /login:
@@ -116,33 +108,39 @@ exports.register = async (req, res) => {
  */
 exports.login = async (req, res) => {
   try {
-    const user = await User.findOne({ where: { username: req.body.username } });
+    const { username, password } = req.body;
+
+    console.log("Received username:", username);
+
+    const user = await User.findOne({ where: { username } });
 
     if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      console.log("User not found");
+      return res.status(401).json({ message: "User not found" });
     }
 
-    const isPasswordValid = await bcrypt.compare(
-      req.body.password,
-      user.password
-    );
+    console.log("User data from the database:", user);
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      console.log("Invalid password");
+      return res.status(401).json({ message: "Invalid password" });
     }
 
-    const token = jwt.sign({ userId: user.id }, "your-secret-key", {
-      expiresIn: "1h",
-    });
+    const payload = {
+      userId: user.userId,
+    };
+
+
+    const token = config.generateToken(payload);
 
     res.status(200).json({ message: "Authentication successful", token });
   } catch (error) {
-    console.error(error);
+    console.error("Error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
 
 
 /**
@@ -165,7 +163,6 @@ exports.login = async (req, res) => {
  *         description: Internal server error.
  */
 
-
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.findAll();
@@ -175,8 +172,6 @@ exports.getAllUsers = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
 
 /**
  * @swagger
@@ -205,7 +200,6 @@ exports.getAllUsers = async (req, res) => {
  *         description: Internal server error.
  */
 
-
 exports.getUserById = async (req, res) => {
   try {
     const user = await User.findByPk(req.params.id);
@@ -218,3 +212,49 @@ exports.getUserById = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+/**
+ * @swagger
+ * /users/{id}:
+ *   delete:
+ *     summary: Delete a user by ID.
+ *     tags:
+ *       - User
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: UUID of the user to delete.
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: User deleted successfully.
+ *       404:
+ *         description: User not found.
+ *       500:
+ *         description: Internal server error.
+ */
+
+
+    exports.deleteUserById = async (req, res) => {
+      try {
+        const userUuid = req.params.uuid; 
+
+        const user = await User.findOne({ where: { userId: userUuid } });
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+
+        await User.destroy({
+          where: { userId: userUuid },
+        });
+
+        res.status(200).json({ message: "User deleted successfully" });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    };
+

@@ -130,18 +130,25 @@ exports.login = async (req, res) => {
 
     const payload = {
       userId: user.userId,
-    };
 
+    };
 
     const token = config.generateToken(payload);
 
-    res.status(200).json({ message: "Authentication successful", token });
+    res.status(200).json({
+      message: "Authentication successful",
+      token,
+      user: {
+        userId: user.userId,
+        username: user.username,
+        email: user.email,
+      },
+    });
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 /**
  * @swagger
@@ -237,24 +244,22 @@ exports.getUserById = async (req, res) => {
  *         description: Internal server error.
  */
 
+exports.deleteUserById = async (req, res) => {
+  try {
+    const userUuid = req.params.uuid;
 
-    exports.deleteUserById = async (req, res) => {
-      try {
-        const userUuid = req.params.uuid; 
+    const user = await User.findOne({ where: { userId: userUuid } });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-        const user = await User.findOne({ where: { userId: userUuid } });
-        if (!user) {
-          return res.status(404).json({ message: "User not found" });
-        }
+    await User.destroy({
+      where: { userId: userUuid },
+    });
 
-        await User.destroy({
-          where: { userId: userUuid },
-        });
-
-        res.status(200).json({ message: "User deleted successfully" });
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Internal server error" });
-      }
-    };
-
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

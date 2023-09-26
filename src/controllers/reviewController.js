@@ -1,55 +1,98 @@
-const Review = require("../models/reviewModels"); 
+const express = require("express");
+const multer = require("multer");
+const path = require("path");
+const { v4: uuidv4 } = require("uuid");
+const Review = require("../models/reviewModels");
+
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, "..", "../upload/")); 
+  },
+  filename: (req, file, cb) => {
+    const fileExtension = path.extname(file.originalname);
+    const uniqueFilename = uuidv4();
+    cb(null, `${uniqueFilename}${fileExtension}`);
+  },
+});
+
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    const allowedMimeTypes = ["image/jpeg", "image/png"];
+    const isAllowed = allowedMimeTypes.includes(file.mimetype);
+
+    if (isAllowed) {
+      cb(null, true);
+    } else {
+      cb(new Error("Invalid file type. Only JPEG and PNG are allowed."));
+    }
+  },
+});
 
 
 /**
  * @swagger
  * /api/reviews:
  *   post:
- *     summary: Create a new review
+ *     summary: Create a new review with optional image upload
  *     tags: [Reviews]
+ *     consumes:
+ *       - multipart/form-data
  *     parameters:
- *       - in: body
- *         name: review
- *         description: Review object
+ *       - in: formData
+ *         name: image
+ *         type: file
+ *         description: The image file to upload (optional)
+ *       - in: formData
+ *         name: reviewName
+ *         type: string
  *         required: true
- *         schema:
- *           type: object
- *           properties:
- *             reviewName:
- *               type: string
- *             reviewedItem:
- *               type: string
- *             group:
- *               type: string
- *             tags:
- *               type: array
- *               items:
- *                 type: string
- *             reviewText:
- *               type: string
- *             imageUrl:
- *               type: string
- *             rating:
- *               type: number
+ *       - in: formData
+ *         name: reviewedItem
+ *         type: string
+ *         required: true
+ *       - in: formData
+ *         name: group
+ *         type: string
+ *         required: true
+ *       - in: formData
+ *         name: tags
+ *         type: array
+ *         items:
+ *           type: string
+ *       - in: formData
+ *         name: reviewText
+ *         type: string
+ *         required: true
+ *       - in: formData
+ *         name: rating
+ *         type: number
+ *         required: true
  *     responses:
  *       201:
  *         description: Review created successfully
+ *       400:
+ *         description: Bad request, validation error
+ *       401:
+ *         description: Unauthorized
  *       500:
  *         description: Internal server error
  */
 
-
-exports.createReview = async (req, res) => {
+exports.createReview = async function (req, res) {
   try {
-    const {
-      reviewName,
-      reviewedItem,
-      group,
-      tags,
-      reviewText,
-      imageUrl,
-      rating,
-    } = req.body;
+    const { reviewName, reviewedItem, group, tags, reviewText, rating } =
+      req.body;
+
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    let imageUrl = null;
+    if (req.file) {
+      imageUrl = `/uploads/${req.file.filename}`;
+    }
 
     const newReview = await Review.create({
       reviewName,
@@ -59,7 +102,7 @@ exports.createReview = async (req, res) => {
       reviewText,
       imageUrl,
       rating,
-      userId: req.user.id, 
+      userId: req.user.id,
     });
 
     res
@@ -70,8 +113,6 @@ exports.createReview = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
 
 /**
  * @swagger
@@ -155,8 +196,6 @@ exports.updateReview = async (req, res) => {
   }
 };
 
-
-
 /**
  * @swagger
  * /api/reviews/{id}:
@@ -194,8 +233,6 @@ exports.deleteReview = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
 
 /**
  * @swagger

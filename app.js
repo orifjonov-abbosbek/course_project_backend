@@ -4,10 +4,11 @@ const cors = require("cors");
 const sequelize = require("./src/database/database");
 const routes = require("./src/routes/routes");
 const swaggerUi = require("swagger-ui-express");
+const fileUpload = require("express-fileupload");
 
 
 const app = express();
-
+app.use(fileUpload());
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -24,7 +25,20 @@ const swaggerOptions = {
       version: "1.0.0",
       description: "API documentation for the Course Project",
     },
-   
+    components: {
+      securitySchemes: {
+        BearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
+    security: [
+      {
+        BearerAuth: [],
+      },
+    ],
   },
   apis: ["./src/controllers/*.js"],
 };

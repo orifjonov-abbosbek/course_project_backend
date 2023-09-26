@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 module.exports = {
   jwtSecret: "zloy",
   jwtOptions: {
-    expiresIn: "1h",
+    expiresIn: "8h",
   },
 };
 
@@ -16,7 +16,7 @@ function generateToken(data) {
 
 
 function verifyToken(req, res, next) {
-  const token = req.header("Authorization");
+  const token = req.get("Authorization"); 
 
   if (!token) {
     return res.status(401).json({ message: "No token provided" });
@@ -31,6 +31,7 @@ function verifyToken(req, res, next) {
     next();
   });
 }
+
 
 module.exports.generateToken = generateToken;
 module.exports.verifyToken = verifyToken;

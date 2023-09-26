@@ -182,18 +182,18 @@ exports.getAllUsers = async (req, res) => {
 
 /**
  * @swagger
- * /users/{id}:
+ * /users/{uuid}:
  *   get:
- *     summary: Get a user by ID.
+ *     summary: Get a user by UUID.
  *     tags:
  *       - User
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: uuid
  *         required: true
- *         description: ID of the user to retrieve.
+ *         description: UUID of the user to retrieve.
  *         schema:
- *           type: integer
+ *           type: string
  *     responses:
  *       200:
  *         description: A user.
@@ -206,6 +206,7 @@ exports.getAllUsers = async (req, res) => {
  *       500:
  *         description: Internal server error.
  */
+
 
 exports.getUserById = async (req, res) => {
   try {

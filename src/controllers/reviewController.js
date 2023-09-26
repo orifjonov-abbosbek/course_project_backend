@@ -1,34 +1,14 @@
 const express = require("express");
-const multer = require("multer");
 const path = require("path");
+ const jwtConfig  = require("../config/conf");
+
 const { v4: uuidv4 } = require("uuid");
 const Review = require("../models/reviewModels");
 
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "..", "../upload/")); 
-  },
-  filename: (req, file, cb) => {
-    const fileExtension = path.extname(file.originalname);
-    const uniqueFilename = uuidv4();
-    cb(null, `${uniqueFilename}${fileExtension}`);
-  },
-});
 
-const upload = multer({
-  storage,
-  fileFilter: (req, file, cb) => {
-    const allowedMimeTypes = ["image/jpeg", "image/png"];
-    const isAllowed = allowedMimeTypes.includes(file.mimetype);
 
-    if (isAllowed) {
-      cb(null, true);
-    } else {
-      cb(new Error("Invalid file type. Only JPEG and PNG are allowed."));
-    }
-  },
-});
+
 
 
 /**
@@ -85,34 +65,81 @@ exports.createReview = async function (req, res) {
     const { reviewName, reviewedItem, group, tags, reviewText, rating } =
       req.body;
 
-    if (!req.user || !req.user.id) {
+    // Check if the 'Authorization' header with a valid token is present
+    const token = req.get('Authorization'); // Use req.get() to retrieve the 'Authorization' header
+    console.log(token)
+    if (!token) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    let imageUrl = null;
-    if (req.file) {
-      imageUrl = `/uploads/${req.file.filename}`;
+    try {
+      jwtConfig.verifyToken(token, (err, decodedToken) => {
+        if (err || !decodedToken || !decodedToken.userId) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        let imageUrl = null;
+        if (req.files && req.files.image) {
+          const uploadedFile = req.files.image;
+          if (["image/jpeg", "image/png"].includes(uploadedFile.mimetype)) {
+            const uniqueFilename = `${uuidv4()}${path.extname(
+              uploadedFile.name
+            )}`;
+            uploadedFile.mv(
+              path.join(__dirname, "..", "uploads", uniqueFilename)
+            );
+            imageUrl = `/uploads/${uniqueFilename}`;
+          } else {
+            return res.status(400).json({ message: "Invalid file type" });
+          }
+        }
+
+        const newReview =  Review.create({
+          reviewName,
+          reviewedItem,
+          group,
+          tags,
+          reviewText,
+          imageUrl,
+          rating,
+          userId: decodedToken.userId, 
+        });
+
+        res
+          .status(201)
+          .json({ message: "Review created successfully", review: newReview });
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(401).json({ message: "Unauthorized" });
     }
-
-    const newReview = await Review.create({
-      reviewName,
-      reviewedItem,
-      group,
-      tags,
-      reviewText,
-      imageUrl,
-      rating,
-      userId: req.user.id,
-    });
-
-    res
-      .status(201)
-      .json({ message: "Review created successfully", review: newReview });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * @swagger
